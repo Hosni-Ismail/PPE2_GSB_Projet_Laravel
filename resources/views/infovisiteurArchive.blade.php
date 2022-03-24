@@ -1,5 +1,7 @@
 @extends ('listeVisiteurArchive')
-@section('contenu1')<? /* permet d afficher le contenu inferieur */?>
+@section('contenu1')
+@section('contenu2')
+<? /* permet d afficher le contenu inferieur */?>
 <form method = "GET" action = "{{ URL::action('gererFraisController@telecharge') }}">
 <fieldset>
     <h3>Visiteur Archiver : {{ $Visiteurs['nom']}}/{{ $Visiteurs['prenom']}}  

@@ -272,7 +272,7 @@ class gererFraisController extends Controller
         $VisiteursDeSuppression = $request['dateSupression'];
         $VisiteursDeValiditer = $request['dateValidite'];
 
-        $u = gererFraisController::generateur($VisiteursNom,$VisiteursPrenom,$VisiteursAdresse,$VisiteursVille,$VisiteursCp,$VisiteursEmbauche,$VisiteursDeSuppression,$VisiteursDeValiditer);
+        $u = gererFraisController::generateur($VisiteursNom,$VisiteursPrenom,$VisiteursVille,$VisiteursCp,$VisiteursAdresse,$VisiteursEmbauche,$VisiteursDeSuppression,$VisiteursDeValiditer);
 
         return $u;
 
