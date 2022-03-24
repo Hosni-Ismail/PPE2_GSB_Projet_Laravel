@@ -1,0 +1,2 @@
+@extends ('sommaire')
+@extends('message')
