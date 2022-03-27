@@ -317,6 +317,32 @@ public function getInfoFicheFraisVisiteur($prenom)
 }
 
 
+/**
+ * Retourne  l'ensemble une f
+ 
+ * @param $prenom
+ * @return l'idEtat, datemotif et nombre de justificatif sous la forme d'un tableau associatif 
+*/
+public function getInfoFicheFraisVisiteurLibelle($id)
+{
+    $req = "select fichefrais.idEtat as idEtat  from  fichefrais inner join etat on fichefrais.idEtat = etat.id 
+        inner join visiteur on visiteur.id=fichefrais.idVisiteur
+		where visiteur.id = '$id'";
+		$res = $this->monPdo->query($req);
+		$lesLigne = $res->fetchall();
+		$etat =0;
+                     
+		foreach($lesLigne as $libEtat)
+		{
+			if($libEtat =="CR" or $libEtat =="CL" )
+			{
+
+				$etat = 1;
+			}
+		}
+
+		return $etat;
+}
 
 
 

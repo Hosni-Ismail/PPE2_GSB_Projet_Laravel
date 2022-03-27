@@ -6,6 +6,7 @@ use PdoGsb;
 use MyDate;
 use Dompdf\Dompdf;
 use Dompdf\Options;
+use PDO;
 
 class gererFraisController extends Controller
 {
@@ -34,7 +35,7 @@ class gererFraisController extends Controller
                 $mois = $anneeMois['mois'];
                 if(PdoGsb::estPremierFraisMois($idVisiteur,$mois))
                 {
-                 PdoGsb::creeNouvellesLignesFrais($idVisiteur,$mois);
+                    PdoGsb::creeNouvellesLignesFrais($idVisiteur,$mois);
                 }
                     $lesFrais = PdoGsb::getLesFraisForfait($idVisiteur,$mois);
                     $view = view('majFraisForfait')
@@ -64,7 +65,7 @@ class gererFraisController extends Controller
             $roleVisiteur=$visiteur['role'];
             $prenom = $visiteur['prenom'];
             $nom = $visiteur['nom'];
-            $indentifiantVisiteurASupprimer = $request['id'];
+            $indentifiantVisiteurASupprimer = $request['id']; 
             if($roleVisiteur==1)//supression visiteur selectionne
             {
                 //recuperation des informations du visiteurs a supprimes
@@ -85,27 +86,55 @@ class gererFraisController extends Controller
                 $dateVal = date("Y-m-d", strtotime('+10 year'));
 
 
-                //insertion du visiteur a supprimer dans la table archive
-                $insertionVisiteurAsupprimer=PdoGsb::InsertVisiteurInfoSupprime($id,$nom,$prenom,$login,$mdp,$adresse,$cp,$ville,$date_embauche,$role,$datesupression,$dateVal);
-                //Suppresion du visteur 
-                $deleteVisiteurtableVisiteur=PdoGsb::supprimeVisiteurSurVisiteur($indentifiantVisiteurASupprimer);
-                //(alteration des tables en vue de modifier les contraintes de base et integrer le on delete cascade)verification
-                $verification = PdoGsb::getLesInfosFicheFraisMois($indentifiantVisiteurASupprimer);
-                if($verification == null)
+                // verification que sur l'etat de la fiche (rembourser ou non) 
+                $verificationEtatFiche = PdoGsb::getInfoFicheFraisVisiteurLibelle($indentifiantVisiteurASupprimer );
+                
+
+                
+                if($verificationEtatFiche == 1)
                 {
-                        $visiteur = session('visiteur');
-                        $idVisiteur = $visiteur['id'];
-                        $roleVisiteur=$visiteur['role'];
-                        $prenom = $visiteur['prenom'];
-                        $nom = $visiteur['nom'];
-                        $message = "Suppression effectuée avec succès !";
-                        return view('valider')
-                        ->with('nom',$nom)
-                        ->with('prenom',$prenom)
-                        ->with('message',$message)
-                        ->with('roleVisiteur',$roleVisiteur)
-                        ->with('visiteur',$visiteur);  
+                        //insertion du visiteur a supprimer dans la table archive
+                        $insertionVisiteurAsupprimer=PdoGsb::InsertVisiteurInfoSupprime($id,$nom,$prenom,$login,$mdp,$adresse,$cp,$ville,$date_embauche,$role,$datesupression,$dateVal);
+                        //verification
+                        $deleteVisiteurtableVisiteur=PdoGsb::supprimeVisiteurSurVisiteur($indentifiantVisiteurASupprimer);
+                        //(alteration des tables en vue de modifier les contraintes de base et integrer le on delete cascade)verification
+                        $verification = PdoGsb::getLesInfosFicheFraisMois($indentifiantVisiteurASupprimer);
+
+                    if($verification == null )    
+                    {       $visiteur = session('visiteur');
+                            $idVisiteur = $visiteur['id'];
+                            $roleVisiteur=$visiteur['role'];
+                            $prenom = $visiteur['prenom'];
+                            $nom = $visiteur['nom'];
+                            $message = "Suppression effectuée avec succès !";
+                            return view('valider')
+                            ->with('nom',$nom)
+                            ->with('prenom',$prenom)
+                            ->with('message',$message)
+                            ->with('roleVisiteur',$roleVisiteur)
+                            ->with('visiteur',$visiteur); 
+                    
+                    } 
+                    else
+                    {
+                            $visiteur = session('visiteur');
+                            $idVisiteur = $visiteur['id'];
+                            $roleVisiteur=$visiteur['role'];
+                            $prenom = $visiteur['prenom'];
+                            $nom = $visiteur['nom'];
+                            $erreurs[] = "Erreur lors de la suppression.Veuillez recommencer
+                            NB: Si le problème persiste signalez le à votre développeur web .
+                            Merci!!!
+                            ";
+                            return view('erreur')
+                            ->with('nom',$nom)
+                            ->with('prenom',$prenom)
+                            ->with('erreurs',$erreurs)                        
+                            ->with('roleVisiteur',$roleVisiteur)
+                            ->with('visiteur',$visiteur);
+                    }
                 }
+            
                 else
                 {
                     $visiteur = session('visiteur');
@@ -113,9 +142,7 @@ class gererFraisController extends Controller
                     $roleVisiteur=$visiteur['role'];
                     $prenom = $visiteur['prenom'];
                     $nom = $visiteur['nom'];
-                    $erreurs[] = "Erreur lors de la suppression.Veuillez recommencer
-                    NB: Si le problème persiste signalez le à votre développeur web .
-                    Merci!!!
+                    $erreurs[] = "Cette utilisateur a des fiches de frais non rembourse ou en cours de remboursements
                     ";
                     return view('erreur')
                     ->with('nom',$nom)
@@ -127,8 +154,6 @@ class gererFraisController extends Controller
 
 
             }
-        
-        
             else
             {
                 $anneeMois = MyDate::getAnneeMoisCourant();
